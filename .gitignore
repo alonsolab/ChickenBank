@@ -1,0 +1,10 @@
+# Archivos de entorno y temporales
+venv/
+__pycache__/
+*.pyc
+
+# Base de datos local
+monopoly.db
+
+# Configuración de VS Code
+.vscode/

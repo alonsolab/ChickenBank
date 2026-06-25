@@ -1,1 +1,479 @@
-<h1>Bienvenido a ChickenBank</h1>
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChickenBank</title>
+    <style>
+        body {
+            background-color: #F5F6F8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #FF7A00, #FF5C00);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            box-shadow: 0 4px 6px rgba(255, 122, 0, 0.2);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card {
+            background: white;
+            margin: 15px;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .saldo-title {
+            color: #666;
+            font-size: 14px;
+            margin: 0 0 5px 0;
+            font-weight: 600;
+        }
+
+        .saldo-amount {
+            color: #333;
+            font-size: 38px;
+            margin: 0;
+            font-weight: bold;
+            letter-spacing: -1px;
+        }
+
+        .btn-text {
+            color: #31409F;
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .qr-container {
+            text-align: center;
+        }
+
+        .qr-container h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .qr-container img {
+            max-width: 160px;
+            margin: 10px 0;
+            border: 2px solid #F5F6F8;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .nav-bottom {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        .nav-item {
+            text-align: center;
+            color: #b0b0b0;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 33%;
+        }
+
+        .nav-item.active {
+            color: #31409F;
+        }
+
+        .nav-item span {
+            display: block;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        /* Ajustes para el logo */
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-img {
+            height: 45px;
+            /* Ajusta este valor según el tamaño de tu imagen */
+            width: auto;
+            /* Mantiene la proporción original */
+            object-fit: contain;
+            padding-right: 10px;
+        }
+
+        .qr-img {
+            height: 20px;
+            /* Ajusta este valor según el tamaño de tu imagen */
+            width: auto;
+            /* Mantiene la proporción original */
+            object-fit: contain;
+        }
+
+        .saldo-qr-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-izquierda {
+            flex: 2;
+        }
+
+        .qr-derecha {
+            flex: 1;
+            text-align: right;
+        }
+
+        .qr-derecha img {
+            max-width: 80px;
+            /* Más pequeño para que quepa al costado */
+            border-radius: 8px;
+        }
+    </style>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+
+<body>
+
+
+    <div class="header">
+        <div class="logo-container">
+            <img src="/static/img/logo.png" alt="ChickenBank Logo" class="logo-img">
+            <div>
+                <h1>ChickenBank</h1>
+            </div>
+        </div>
+        <span id="nombre-jugador"
+            style="font-size: 16px; font-weight: bold; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px;">Cargando...</span>
+    </div>
+
+    <div class="card saldo-qr-container">
+        <div class="info-izquierda">
+            <p class="saldo-title">Cuenta Monopoly</p>
+            <p class="saldo-amount" id="monto-saldo">$ 0</p>
+            <div class="btn-text" id="btn-ocultar">👁️ Ocultar saldo</div>
+        </div>
+        <div class="qr-derecha">
+            <img id="codigo-qr" src="" alt="QR">
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-top:0; font-size: 16px; color: #333;">Últimos Movimientos</h3>
+        <div id="lista-movimientos" style="font-size: 14px; color: #666;">
+            <p>Cargando transacciones...</p>
+        </div>
+    </div>
+
+    <div class="nav-bottom">
+        <div class="nav-item active"><span>🏠</span>Inicio</div>
+        <div class="nav-item"><span><img src="/static/img/qr.png" alt="ChickenBank Logo" class="qr-img"></span>Cobrar a
+            Jugador</div>
+        <div class="nav-item" onclick="abrirTransferencia()"><span>💸</span>Transferir</div>
+
+    </div>
+
+    <script>
+        // 1. Obtener el ID del jugador desde la URL (ej: ?id=p1)
+        const urlParams = new URLSearchParams(window.location.search);
+        let jugadorId = urlParams.get('id');
+
+        // Si no se pone ID en la URL, por defecto seremos el jugador 'p1' (Krlos)
+        if (!jugadorId) {
+            jugadorId = 'p1';
+        }
+
+        // 2. Función para conectar con FastAPI y traer los datos reales
+        async function cargarDatosJugador() {
+            try {
+                const respuesta = await fetch(`/api/jugadores/${jugadorId}`);
+                if (!respuesta.ok) {
+                    throw new Error("Jugador no encontrado en la base de datos");
+                }
+                const datos = await respuesta.json();
+
+                // Actualizar la interfaz con datos de SQLite
+                document.getElementById('nombre-jugador').innerHTML = ` <img src="/static/img/user.png" alt="User" class="logo-img">${datos.nombre}`;
+                document.getElementById('monto-saldo').innerText = `$ ${datos.saldo.toLocaleString('es-CL')}`;
+
+                // Generar el QR apuntando a su ID único de base de datos
+                document.getElementById('codigo-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${datos.id}`;
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('nombre-jugador').innerText = "⚠️ Error";
+                document.getElementById('monto-saldo').innerText = "$ Error";
+            }
+        }
+
+        // Funcionalidad estética para ocultar/mostrar saldo (como BancoEstado)
+        let saldoOculto = false;
+        document.getElementById('btn-ocultar').addEventListener('click', () => {
+            const saldoTxt = document.getElementById('monto-saldo');
+            if (!saldoOculto) {
+                saldoTxt.setAttribute('data-original', saldoTxt.innerText);
+                saldoTxt.innerText = "$ ••••••";
+                document.getElementById('btn-ocultar').innerText = "👁️ Mostrar saldo";
+            } else {
+                saldoTxt.innerText = saldoTxt.getAttribute('data-original');
+                document.getElementById('btn-ocultar').innerText = "👁️ Ocultar saldo";
+            }
+            saldoOculto = !saldoOculto;
+        });
+
+        // Ejecutar la carga al abrir la página
+        cargarDatosJugador();
+
+        // Variable para el lector
+        let html5QrCode;
+
+        async function iniciarEscaneo() {
+            // Dentro de la función de inicio del escaneo
+            // Asegúrate de que esta lógica esté en tu función de escaneo/cobro
+
+
+            document.getElementById('pantalla-cobro').style.display = 'block';
+            html5QrCode = new Html5Qrcode("reader");
+
+            html5QrCode.start(
+                { facingMode: "environment" }, // Usa la cámara trasera
+                { fps: 10, qrbox: 250 },
+
+                // Dentro de tu lógica de escaneo en index.html
+                async (decodedText, decodedResult) => {
+                    let monto = document.getElementById('monto-cobro').value.replace(/[^\d]/g, ''); // Limpiamos el formato moneda
+
+                    if (monto > 0) {
+                        // 1. Buscamos el nombre del jugador usando su ID (decodedText)
+                        let nombreJugador = "Jugador"; // Fallback por defecto
+                        try {
+                            const res = await fetch(`/api/jugadores/${decodedText}`);
+                            if (res.ok) {
+                                const datos = await res.json();
+                                nombreJugador = datos.nombre;
+                            }
+                        } catch (e) { console.error("No se pudo obtener el nombre"); }
+
+                        // 2. Mostramos la alerta con el nombre
+                        alert(`Cobrando $${monto} a ${nombreJugador}`);
+
+                        // 3. Procesamos el cobro
+                        await procesarCobro(decodedText, monto);
+                        cerrarCamara();
+                    } else {
+                        alert("Ingresa un monto válido");
+                    }
+                }
+
+
+
+            );
+
+
+
+
+
+
+
+        }
+
+        function cerrarCamara() {
+            html5QrCode.stop();
+            document.getElementById('pantalla-cobro').style.display = 'none';
+        }
+
+
+        async function procesarCobro(id_escaneado, monto) {
+            const data = {
+                emisor_id: id_escaneado, // Quien cae en la propiedad (debe pagar)
+                receptor_id: jugadorId,   // Tú (el dueño que escanea, debe recibir)
+                monto: parseInt(monto)
+            };
+
+            const respuesta = await fetch('/api/cobrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const resultado = await respuesta.json();
+
+            if (resultado.status === 'success') {
+                alert("¡Cobro realizado con éxito!");
+                location.reload(); // Recarga la página para mostrar el nuevo saldo actualizado
+            } else {
+                alert("Error al procesar el cobro: " + resultado.message);
+            }
+        }
+
+        async function cargarMovimientos() {
+            try {
+                const respuesta = await fetch(`/api/transacciones/${jugadorId}`); // Asegúrate de tener esta ruta en app.py
+                const movimientos = await respuesta.json();
+
+                const lista = document.getElementById('lista-movimientos');
+                lista.innerHTML = movimientos.map(m => `
+            <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
+                <span>${m.concepto}</span>
+                <span style="float:right; font-weight:bold; color: ${m.monto > 0 ? 'green' : 'red'}">
+                    ${m.monto > 0 ? '+' : ''}${m.monto}
+                </span>
+            </div>
+        `).join('');
+            } catch (e) {
+                document.getElementById('lista-movimientos').innerText = "Sin movimientos recientes.";
+            }
+        }
+
+        // Llama a esta función al final de cargarDatosJugador()
+        cargarMovimientos();
+
+
+        async function abrirTransferencia() {
+            const modal = document.getElementById('modal-transferencia');
+            modal.style.display = 'flex';
+
+            // Cargar jugadores
+            const res = await fetch('/api/todos_jugadores');
+            const jugadores = await res.json();
+            const select = document.getElementById('select-jugador');
+            select.innerHTML = jugadores.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
+        }
+
+        function cerrarTransferencia() {
+            document.getElementById('modal-transferencia').style.display = 'none';
+        }
+
+        function formatCurrency(input) {
+            // Elimina todo lo que no sea número
+            let value = input.value.replace(/\D/g, '');
+            if (value === "") {
+                input.value = "";
+                return;
+            }
+            // Formatea con puntos de miles
+            let formatted = new Intl.NumberFormat('es-CL').format(value);
+            input.value = "$ " + formatted;
+        }
+
+        async function ejecutarTransferencia() {
+            const receptor_id = document.getElementById('select-jugador').value;
+            const monto = document.getElementById('monto-transferencia').value;
+
+            const data = { emisor_id: jugadorId, receptor_id: receptor_id, monto: parseInt(monto) };
+
+            const res = await fetch('/api/cobrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if ((await res.json()).status === 'success') {
+                alert("Transferencia exitosa");
+                location.reload();
+            }
+        }
+
+        const ws = new WebSocket(`ws://${window.location.host}/ws/${jugadorId}`);
+
+        ws.onmessage = function (event) {
+            if (event.data === "update") {
+                // Al recibir la señal, actualizamos los datos inmediatamente
+                cargarDatosJugador();
+                cargarMovimientos();
+            }
+        };
+
+
+
+        // Vincula el botón del menú
+        document.querySelectorAll('.nav-item')[1].addEventListener('click', iniciarEscaneo);
+    </script>
+    <div id="modal-transferencia"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; justify-content:center; align-items:center;">
+        <div style="background:white; padding:20px; border-radius:15px; width:80%;">
+            <h3>Transferir dinero</h3>
+            <select id="select-jugador" style="width:100%; padding:10px; margin-bottom:10px;"></select>
+            <input type="number" id="monto-transferencia" placeholder="Monto"
+                style="width:90%; padding:10px; margin-bottom:10px;">
+            <button onclick="ejecutarTransferencia()"
+                style="width:100%; padding:10px; background:#089403; color:white; border:none; border-radius:8px;">Transferir</button>
+            <button onclick="cerrarTransferencia()"
+                style="width:100%; padding:10px; background:grey; color:white; border:none; border-radius:8px; margin-top:10px;">Cancelar</button>
+        </div>
+    </div>
+
+
+    <div id="pantalla-cobro"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#F5F6F8; z-index:1000; padding:20px; box-sizing:border-box;">
+        <h3 style="text-align:center; color:#333;">Cobrar a Jugador</h3>
+
+        <div style="text-align:center; margin: 20px 0;">
+            <p style="color:#666; font-size: 14px; margin:0;">Monto a cobrar</p>
+            <input type="text" id="monto-cobro" placeholder="$ 0"
+                style="width: 100%; border:none; background:transparent; text-align:center; font-size: 48px; font-weight:bold; color:#FF7A00; outline:none;"
+                oninput="formatCurrency(this)">
+        </div>
+
+        <div id="reader"
+            style="width: 250px; height: 250px; margin: 0 auto; border-radius: 20px; overflow: hidden; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        </div>
+
+        <button onclick="cerrarCamara()"
+            style="width:90%; padding:15px; background:#e0e0e0; color:#333; border:none; border-radius:15px; margin: 20px auto; display:block; font-weight:bold;">
+            Cancelar
+        </button>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <button onclick="confirmarReinicio()"
+            style="background: #e74c3c; color: white; border:none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+            🔄 Reiniciar Partida
+        </button>
+    </div>
+
+    <script>
+        async function confirmarReinicio() {
+            if (confirm("¿Estás seguro de que quieres borrar todos los saldos y transacciones?")) {
+                const res = await fetch('/api/reiniciar_juego', { method: 'POST' });
+                if ((await res.json()).status === 'success') {
+                    alert("Juego reiniciado correctamente");
+                    location.reload(); // Recargamos para mostrar los saldos iniciales
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
