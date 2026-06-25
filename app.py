@@ -44,6 +44,7 @@ def init_db():
         
     conexion.commit()
     conexion.close()
+    
 
 if not os.path.exists(DB_NAME):
     init_db()
@@ -96,7 +97,7 @@ def index():
 # --- API ENDPOINTS (Datos para el JavaScript) ---
 
 @app.post("/api/reiniciar_juego")
-def reiniciar_juego():
+async def reiniciar_juego():
     conexion = sqlite3.connect(DB_NAME)
     cursor = conexion.cursor()
     
@@ -115,7 +116,7 @@ def reiniciar_juego():
         cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p5', 'Player 5', 1500)")
         cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p6', 'Playar 6', 1500)")
         conexion.commit()
-
+        await manager.broadcast("update")
         return {"status": "success", "message": "Juego reiniciado"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
