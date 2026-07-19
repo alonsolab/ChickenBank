@@ -38,8 +38,8 @@ def init_db():
         cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p2', 'Alonso', 1500)")
         cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p3', 'Karla', 1500)")
         cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p4', 'Gladys', 1500)")
-        cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p5', 'Player 5', 1500)")
-        cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p6', 'Playar 6', 1500)")
+        cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p5', 'Pollo', 1500)")
+        cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p6', 'Player', 1500)")
         print("Jugadores de prueba creados: p1 (Krlos), p2 (Banquero).")
         
     conexion.commit()
@@ -113,8 +113,8 @@ async def reiniciar_juego():
         cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p2', 'Alonso', 1500)")
         cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p3', 'Karla', 1500)")
         cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p4', 'Gladys', 1500)")
-        cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p5', 'Player 5', 1500)")
-        cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p6', 'Playar 6', 1500)")
+        cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p5', 'Pollo', 1500)")
+        cursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('p6', 'Player6', 1500)")
         conexion.commit()
         await manager.broadcast("update")
         return {"status": "success", "message": "Juego reiniciado"}

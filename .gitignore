@@ -8,3 +8,6 @@ monopoly.db
 
 # Configuración de VS Code
 .vscode/
+
+#Certifacados y llaves privadas
+*.pem

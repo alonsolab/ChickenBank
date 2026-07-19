@@ -403,8 +403,10 @@
                 location.reload();
             }
         }
-
-        const ws = new WebSocket(`ws://${window.location.host}/ws/${jugadorId}`);
+        
+        const protocolo = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocolo}//${window.location.host}/ws/${jugadorId}`);
+        
 
         ws.onmessage = function (event) {
             if (event.data === "update") {
