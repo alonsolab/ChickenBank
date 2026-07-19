@@ -276,6 +276,7 @@
                     if (monto > 0) {
                         // 1. Buscamos el nombre del jugador usando su ID (decodedText)
                         let nombreJugador = "Jugador"; // Fallback por defecto
+                        html5QrCode.stop();
                         try {
                             const res = await fetch(`/api/jugadores/${decodedText}`);
                             if (res.ok) {
@@ -420,6 +421,24 @@
 
         // Vincula el botón del menú
         document.querySelectorAll('.nav-item')[1].addEventListener('click', iniciarEscaneo);
+
+document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") {
+        console.log("El navegador volvió a estar activo. Actualizando datos...");
+        
+        // 1. Forzamos la actualización inmediata de los datos
+        cargarDatosJugador();
+        if (typeof cargarMovimientos === "function") {
+            cargarMovimientos(); 
+        }
+
+        // 2. Opcional: Recomponer el WebSocket si se cortó
+        // Si notas que el WebSocket quedó muerto al volver, 
+        // aquí podrías llamar a la función que inicializa tu conexión ws.
+    }
+});
+
+        
     </script>
     <div id="modal-transferencia"
         style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; justify-content:center; align-items:center;">
