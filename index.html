@@ -213,9 +213,11 @@
             jugadorId = 'p1';
         }
 
+
         // 2. Función para conectar con FastAPI y traer los datos reales
         async function cargarDatosJugador() {
             try {
+
                 const respuesta = await fetch(`/api/jugadores/${jugadorId}`);
                 if (!respuesta.ok) {
                     throw new Error("Jugador no encontrado en la base de datos");
@@ -228,6 +230,12 @@
 
                 // Generar el QR apuntando a su ID único de base de datos
                 document.getElementById('codigo-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${datos.id}`;
+                if (jugadorId === 'bank') {
+                    document.getElementById('tarjeta-reinicio').style.display = 'block';
+                } else {
+                    document.getElementById('tarjeta-reinicio').style.display = 'none';
+                }
+
 
             } catch (error) {
                 console.error(error);
@@ -363,12 +371,14 @@
         async function abrirTransferencia() {
             const modal = document.getElementById('modal-transferencia');
             modal.style.display = 'flex';
+            document.getElementById('monto-transferencia').focus();
 
             // Cargar jugadores
             const res = await fetch('/api/todos_jugadores');
             const jugadores = await res.json();
             const select = document.getElementById('select-jugador');
             select.innerHTML = jugadores.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
+
         }
 
         function cerrarTransferencia() {
@@ -389,7 +399,8 @@
 
         async function ejecutarTransferencia() {
             const receptor_id = document.getElementById('select-jugador').value;
-            const monto = document.getElementById('monto-transferencia').value;
+            //const monto = document.getElementById('monto-transferencia').value;
+            const monto = document.getElementById('monto-transferencia').value.replace(/[^\d]/g, '');
 
             const data = { emisor_id: jugadorId, receptor_id: receptor_id, monto: parseInt(monto) };
 
@@ -404,51 +415,85 @@
                 location.reload();
             }
         }
-        
-        const protocolo = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${protocolo}//${window.location.host}/ws/${jugadorId}`);
-        
 
-        ws.onmessage = function (event) {
-            if (event.data === "update") {
-                // Al recibir la señal, actualizamos los datos inmediatamente
-                cargarDatosJugador();
-                cargarMovimientos();
-            }
-        };
 
 
 
         // Vincula el botón del menú
         document.querySelectorAll('.nav-item')[1].addEventListener('click', iniciarEscaneo);
+        // 1. Declaramos la variable del WebSocket de forma global para poder acceder a ella desde cualquier parte
+        let ws;
 
-document.addEventListener("visibilitychange", function() {
-    if (document.visibilityState === "visible") {
-        console.log("El navegador volvió a estar activo. Actualizando datos...");
-        
-        // 1. Forzamos la actualización inmediata de los datos
-        cargarDatosJugador();
-        if (typeof cargarMovimientos === "function") {
-            cargarMovimientos(); 
+        function conectarWebSocket() {
+            // Si ya existe una conexión abierta o conectándose, no hacemos nada para evitar duplicados
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                console.log("El WebSocket ya está activo o conectándose.");
+                return;
+            }
+
+            console.log("Iniciando conexión WebSocket...");
+            const protocolo = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocolo}//${window.location.host}/ws/${jugadorId}`);
+
+            ws.onmessage = function (event) {
+                if (event.data === "update") {
+                    console.log("Señal de actualización recibida por WebSocket.");
+                    cargarDatosJugador();
+                    if (typeof cargarMovimientos === "function") {
+                        cargarMovimientos();
+                    }
+                }
+            };
+
+            ws.onclose = function () {
+                console.log("WebSocket cerrado. Se intentará reconectar cuando sea necesario o al reactivar la app.");
+            };
+
+            ws.onerror = function (error) {
+                console.error("Error en el WebSocket:", error);
+            };
         }
 
-        // 2. Opcional: Recomponer el WebSocket si se cortó
-        // Si notas que el WebSocket quedó muerto al volver, 
-        // aquí podrías llamar a la función que inicializa tu conexión ws.
-    }
-});
+        // 2. Intentamos conectar por primera vez al cargar el script
+        conectarWebSocket();
 
-        
+        // 3. Control de visibilidad del navegador (Optimizado para Smartphones)
+        document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible") {
+                console.log("El navegador volvió a estar activo. Actualizando datos...");
+
+                // Forzamos la actualización inmediata de los datos de la interfaz
+                cargarDatosJugador();
+                if (typeof cargarMovimientos === "function") {
+                    cargarMovimientos();
+                }
+
+                // Verificamos si el WebSocket se cerró (readyState 2 = CLOSING, 3 = CLOSED) o si no existe
+                if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+                    console.log("Se detectó WebSocket caído tras la suspensión. Reconectando...");
+                    conectarWebSocket();
+                }
+            }
+        });
+
+
+
     </script>
     <div id="modal-transferencia"
         style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; justify-content:center; align-items:center;">
         <div style="background:white; padding:20px; border-radius:15px; width:80%;">
             <h3>Transferir dinero</h3>
-            <select id="select-jugador" style="width:100%; padding:10px; margin-bottom:10px;"></select>
-            <input type="number" id="monto-transferencia" placeholder="Monto"
-                style="width:90%; padding:10px; margin-bottom:10px;">
+            <input type="text" id="monto-transferencia" placeholder="$ 0"
+                style="width: 100%; border:none; background:transparent; text-align:center; font-size: 48px; font-weight:bold; color:#FF7A00; outline:none;"
+                oninput="formatCurrency(this)">
+
+            <select id="select-jugador" style="width:100%; padding:10px; margin-bottom:10px; margin-top:30px;"></select>
+
+
+
+
             <button onclick="ejecutarTransferencia()"
-                style="width:100%; padding:10px; background:#089403; color:white; border:none; border-radius:8px;">Transferir</button>
+                style="width:100%; padding:10px; background:#089403; color:white; border:none; border-radius:8px; margin-top:30px;">Transferir</button>
             <button onclick="cerrarTransferencia()"
                 style="width:100%; padding:10px; background:grey; color:white; border:none; border-radius:8px; margin-top:10px;">Cancelar</button>
         </div>
@@ -476,7 +521,8 @@ document.addEventListener("visibilitychange", function() {
         </button>
     </div>
 
-    <div class="card" style="text-align:center;">
+    <!-- Esta tarjeta iniciará oculta y solo se mostrará para el 'bank' -->
+    <div id="tarjeta-reinicio" class="card" style="text-align:center; display: none;">
         <button onclick="confirmarReinicio()"
             style="background: #e74c3c; color: white; border:none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">
             🔄 Reiniciar Partida

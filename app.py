@@ -210,7 +210,7 @@ def obtener_movimientos(jugador_id: str):
         JOIN jugadores e ON t.emisor_id = e.id
         JOIN jugadores r ON t.receptor_id = r.id
         WHERE emisor_id = ? OR receptor_id = ?
-        ORDER BY fecha DESC LIMIT 7
+        ORDER BY fecha DESC LIMIT 8
     """, (jugador_id, jugador_id, jugador_id, jugador_id, jugador_id, jugador_id))
     
     movs = [{"concepto": row[0], "monto": row[1]} for row in cursor.fetchall()]
